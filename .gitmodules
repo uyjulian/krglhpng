@@ -1,6 +1,12 @@
 [submodule "zlib"]
-	path = zlib
+	path = external/zlib
 	url = https://github.com/madler/zlib.git
+	ignore = dirty
 [submodule "libpng"]
-	path = libpng
+	path = external/libpng
 	url = https://github.com/glennrp/libpng.git
+	ignore = dirty
+[submodule "external/tp_stubz"]
+	path = external/tp_stubz
+	url = https://github.com/uyjulian/tp_stubz.git
+	branch = mingw

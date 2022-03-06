@@ -631,7 +631,7 @@ EXPORT(HRESULT) V2Link(iTVPFunctionExporter *exporter)
 EXPORT(HRESULT) V2Unlink() {
 	if(TVPPluginGlobalRefCount > GlobalRefCountAtInit) return E_FAIL;
 	
-	TVPRegisterGraphicLoadingHandler( ttstr(TJS_W(".png")), TVPLoadPNG, TVPLoadHeaderPNG, TVPSaveAsPNG, TVPAcceptSaveAsPNG, NULL );
+	TVPUnregisterGraphicLoadingHandler( ttstr(TJS_W(".png")), TVPLoadPNG, TVPLoadHeaderPNG, TVPSaveAsPNG, TVPAcceptSaveAsPNG, NULL );
 
 	TVPUninitImportStub();
 	return S_OK;

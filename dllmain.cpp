@@ -613,7 +613,17 @@ void TVPLoadHeaderPNG(void* formatdata, IStream *src, iTJSDispatch2** dic) {
 }
 
 
-BOOL APIENTRY DllMain( HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved ) {
+BOOLEAN WINAPI DllMain(HMODULE hDllHandle, DWORD nReason, LPVOID lpReserved)
+{
+	switch (nReason)
+	{
+		case DLL_PROCESS_ATTACH:
+		{
+			DisableThreadLibraryCalls(hDllHandle);
+			break;
+		}
+	}
+
 	return TRUE;
 }
 

@@ -38,19 +38,6 @@ bool TVPAcceptSaveAsPNG(void* formatdata, const ttstr & type, class iTJSDispatch
 //---------------------------------------------------------------------------
 // PNG loading handler
 //---------------------------------------------------------------------------
-static ttstr PNG_tag_offs_x(TJS_W("offs_x"));
-static ttstr PNG_tag_offs_y(TJS_W("offs_y"));
-static ttstr PNG_tag_offs_unit(TJS_W("offs_unit"));
-static ttstr PNG_tag_reso_x(TJS_W("reso_x"));
-static ttstr PNG_tag_reso_y(TJS_W("reso_y"));
-static ttstr PNG_tag_reso_unit(TJS_W("reso_unit"));
-static ttstr PNG_tag_vpag_w(TJS_W("vpag_w"));
-static ttstr PNG_tag_vpag_h(TJS_W("vpag_h"));
-static ttstr PNG_tag_vpag_unit(TJS_W("vpag_unit"));
-static ttstr PNG_tag_pixel(TJS_W("pixel"));
-static ttstr PNG_tag_micrometer(TJS_W("micrometer"));
-static ttstr PNG_tag_meter(TJS_W("meter"));
-static ttstr PNG_tag_unknown(TJS_W("unknown"));
 //---------------------------------------------------------------------------
 // meta callback information structure used by  PNG_read_chunk_callback
 struct PNG_read_chunk_callback_user_struct
@@ -124,6 +111,13 @@ static int PNG_read_chunk_callback(png_structp png_ptr,png_unknown_chunkp chunk)
 		tjs_uint32 height = PNG_read_be32(chunk->data+4);
 		tjs_uint8  unit   = chunk->data[8];
 
+		ttstr PNG_tag_vpag_w(TJS_W("vpag_w"));
+		ttstr PNG_tag_vpag_h(TJS_W("vpag_h"));
+		ttstr PNG_tag_vpag_unit(TJS_W("vpag_unit"));
+		ttstr PNG_tag_pixel(TJS_W("pixel"));
+		ttstr PNG_tag_micrometer(TJS_W("micrometer"));
+		ttstr PNG_tag_unknown(TJS_W("unknown"));
+
 		// push information into meta-info
 		user_struct->metainfopushcallback(user_struct->callbackdata, PNG_tag_vpag_w, ttstr((tjs_int)width));
 		user_struct->metainfopushcallback(user_struct->callbackdata, PNG_tag_vpag_h, ttstr((tjs_int)height));
@@ -148,6 +142,17 @@ void TVPLoadPNG(void* formatdata, void *callbackdata, tTVPGraphicSizeCallback si
 	tTVPGraphicScanLineCallback scanlinecallback, tTVPMetaInfoPushCallback metainfopushcallback,
 	tTJSBinaryStream *src, tjs_int keyidx,  tTVPGraphicLoadMode mode)
 {
+	ttstr PNG_tag_offs_x(TJS_W("offs_x"));
+	ttstr PNG_tag_offs_y(TJS_W("offs_y"));
+	ttstr PNG_tag_offs_unit(TJS_W("offs_unit"));
+	ttstr PNG_tag_reso_x(TJS_W("reso_x"));
+	ttstr PNG_tag_reso_y(TJS_W("reso_y"));
+	ttstr PNG_tag_reso_unit(TJS_W("reso_unit"));
+	ttstr PNG_tag_pixel(TJS_W("pixel"));
+	ttstr PNG_tag_micrometer(TJS_W("micrometer"));
+	ttstr PNG_tag_meter(TJS_W("meter"));
+	ttstr PNG_tag_unknown(TJS_W("unknown"));
+
 	png_structp png_ptr=NULL;
 	png_infop info_ptr=NULL;
 	png_infop end_info=NULL;

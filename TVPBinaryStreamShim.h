@@ -9,24 +9,36 @@
 #include <objidl.h>
 #include "tp_stub.h"
 
+#ifndef NO_REDEFINE_CREATESTREAM
 #define TVPCreateStream  CompatTJSBinaryStream::CreateStream
 #define TVPCreateBinaryStreamForRead  CompatTJSBinaryStream::CreateStreamForRead
 #define TVPCreateBinaryStreamForWrite  CompatTJSBinaryStream::CreateStreamForWrite
 #define tTJSBinaryStream CompatTJSBinaryStream
+#endif
 
 //---------------------------------------------------------------------------
 class CompatTJSBinaryStream
 {
-	IStream *Stream;
+	IStream *Stream = NULL;
 public:
+	CompatTJSBinaryStream() {
+	}
 	CompatTJSBinaryStream(IStream *stream) : Stream(stream) {
 		Stream->AddRef();
 	}
 	virtual ~CompatTJSBinaryStream() {
-		Stream->Release();
+		if (Stream)
+		{
+			Stream->Release();
+			Stream = NULL;
+		}
 	}
 
-	tjs_uint64 TJS_INTF_METHOD Seek(tjs_int64 offset, tjs_int whence) {
+	virtual tjs_uint64 TJS_INTF_METHOD Seek(tjs_int64 offset, tjs_int whence) {
+		if (!Stream)
+		{
+			return 0;
+		}
 		DWORD origin;
 
 		switch(whence)
@@ -51,7 +63,7 @@ public:
 		else
 		{
 			orgpossaved = true;
-			orgpos.QuadPart = newpos.QuadPart;
+			memcpy(&orgpos, &newpos, sizeof(orgpos));
 		}
 
 		ofs.QuadPart = offset;
@@ -72,7 +84,11 @@ public:
 		return newpos.QuadPart;
 	}
 
-	tjs_uint TJS_INTF_METHOD Read(void *buffer, tjs_uint read_size) {
+	virtual tjs_uint TJS_INTF_METHOD Read(void *buffer, tjs_uint read_size) {
+		if (!Stream)
+		{
+			return 0;
+		}
 		ULONG cb = read_size;
 		ULONG read;
 		HRESULT hr = Stream->Read(buffer, cb, &read);
@@ -80,29 +96,25 @@ public:
 		return read;
 	}
 
-	tjs_uint TJS_INTF_METHOD Write(const void *buffer, tjs_uint write_size) {
-		ULONG cb = write_size;
-		ULONG write;
-		HRESULT hr = Stream->Write(buffer, cb, &write);
-		if(FAILED(hr)) write = 0;
-		return write;
-	}
-
-	tjs_uint64 TJS_INTF_METHOD GetSize() {
+	virtual tjs_uint64 TJS_INTF_METHOD GetSize() {
+		if (!Stream)
+		{
+			return 0;
+		}
 		HRESULT hr;
 		STATSTG stg;
 
 		hr = Stream->Stat(&stg, STATFLAG_NONAME);
-		if (SUCCEEDED(hr)) stg.cbSize.QuadPart;
+		if (SUCCEEDED(hr)) return (tjs_uint64)(stg.cbSize.QuadPart);
 
 		tjs_uint64 orgpos = GetPosition();
 		tjs_uint64 size = Seek(0, TJS_BS_SEEK_END);
-		Seek(orgpos, SEEK_SET);
+		Seek(orgpos, TJS_BS_SEEK_SET);
 		return size;
 	}
 
 	tjs_uint64 GetPosition() {
-		return Seek(0, SEEK_CUR);
+		return Seek(0, TJS_BS_SEEK_CUR);
 	}
 
 	void SetPosition(tjs_uint64 pos) {
@@ -113,11 +125,6 @@ public:
 	void ReadBuffer(void *buffer, tjs_uint read_size) {
 		if(Read(buffer, read_size) != read_size)
 			TVPThrowExceptionMessage(TJS_W("Read error"));
-	}
-
-	void WriteBuffer(const void *buffer, tjs_uint write_size) {
-		if(Write(buffer, write_size) != write_size)
-			TVPThrowExceptionMessage(TJS_W("Write error"));
 	}
 
 	// reads little-endian integers
@@ -138,7 +145,7 @@ public:
 	}
 
 public:
-	static tTJSBinaryStream* CreateStream(const ttstr & name , tjs_uint32 flags)
+	static tTJSBinaryStream* CreateStream(const ttstr & name , tjs_uint32 flags = 0)
 	{
 		IStream *Stream = TVPCreateIStream(name, flags);
 		if(!Stream) return NULL;
